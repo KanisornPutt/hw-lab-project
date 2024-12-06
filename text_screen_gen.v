@@ -54,6 +54,7 @@ module text_screen_gen(
     debounce_chu db_up(.clk(clk), .reset(reset), .sw(up), .db_level(), .db_tick(move_yu_tick));
     debounce_chu db_down(.clk(clk), .reset(reset), .sw(down), .db_level(), .db_tick(move_yd_tick));
     debounce_chu db_right(.clk(clk), .reset(reset), .sw(right), .db_level(), .db_tick(move_xr_tick));
+//    debounce_chu db_set(.clk(clk), .reset(reset), .sw(set), .db_level(), .db_tick(set_db));
     assign set_db = set;
 //    singlePulser #(
 //        .COUNT_MAX(128),
