@@ -37,7 +37,7 @@ module system(
     //UART
     wire [7:0] data_in, data_out; //WRITE DATA FROM UART, DATA THAT SHOWN ON SCREEN
     wire transmit1, transmit2;
-    wire receive1, receive2;
+    wire received1, received2;
     wire gnd; // ground
     wire [7:0] gnd_b; // ground bus
     
@@ -55,8 +55,16 @@ module system(
     
     clockDiv fdivTarget(targetClk, tclk[18]);
     
-    
- 
+    wire set; 
+    singlePulser #(
+        .COUNT_MAX(128),
+        .COUNT_WIDTH(8)
+    ) db_btnC(
+        .clk(clk),
+        .I(btnC),
+        .O(set)
+    );
+        
     // Display
     quadSevenSeg q7seg(seg, dp, an0, an1, an2, an3, num0, num1, num2, num3, targetClk);    
     
@@ -69,7 +77,7 @@ module system(
                        .x(w_x), .y(w_y));
     
     // instantiate text generation circuit
-    text_screen_gen tsg(.clk(clk), .reset(reset), .video_on(w_vid_on), .set(btnC),
+    text_screen_gen tsg(.clk(clk), .reset(reset), .video_on(w_vid_on), .set(received1),
                         .up(btnU), .down(btnD), .left(btnL), .right(btnR),
                         .sw(data_in[6:0]), .x(w_x), .y(w_y), .rgb(rgb_next));
                         
@@ -81,7 +89,7 @@ module system(
     // UART2 Receive from keyboard or switch and transmit to another
     uart uart2(.rx(RsRx), .data_transmit(sw[7:0]), 
                .tx(JA1), .data_received(gnd_b), .received(received2),
-               .dte(btnU), .clk(clk));
+               .dte(set), .clk(clk));
     
     // rgb buffer
     always @(posedge clk) begin

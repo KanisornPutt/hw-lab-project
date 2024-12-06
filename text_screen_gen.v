@@ -54,7 +54,15 @@ module text_screen_gen(
     debounce_chu db_up(.clk(clk), .reset(reset), .sw(up), .db_level(), .db_tick(move_yu_tick));
     debounce_chu db_down(.clk(clk), .reset(reset), .sw(down), .db_level(), .db_tick(move_yd_tick));
     debounce_chu db_right(.clk(clk), .reset(reset), .sw(right), .db_level(), .db_tick(move_xr_tick));
-    debounce_chu db_set(.clk(clk), .reset(reset), .sw(set), .db_level(), .db_tick(set_db));
+    assign set_db = set;
+//    singlePulser #(
+//        .COUNT_MAX(128),
+//        .COUNT_WIDTH(8)
+//    ) db_set(
+//        .clk(clk),
+//        .I(set),
+//        .O(set_db)
+//    );
     // instantiate the ascii / font rom
     ascii_rom a_rom(.clk(clk), .addr(rom_addr), .data(font_word));
     // instantiate dual-port video RAM (2^12-by-7)
@@ -71,7 +79,7 @@ module text_screen_gen(
             pix_y1_reg <= 0;
             pix_y2_reg <= 0;
         end    
-        else begin
+        else if (we) begin
             cur_x_reg <= cur_x_next;
             cur_y_reg <= cur_y_next;
             pix_x1_reg <= x;
@@ -95,7 +103,7 @@ module text_screen_gen(
     assign bit_addr = pix_x2_reg[2:0];
     assign ascii_bit = font_word[~bit_addr];
     // new cursor position
-    always @* begin
+    always @ (posedge set) begin
     case (1'b1)
         // Logic for cur_x_next
         ((move_xr_tick || set_db) && (cur_x_reg == MAX_X - 1)) || (move_xl_tick && (cur_x_reg == 0)): 
@@ -109,7 +117,7 @@ module text_screen_gen(
     endcase
     end
 
-    always @* begin
+    always @ (posedge set) begin
         case (1'b1)
             // Logic for cur_y_next
             (move_yu_tick && (cur_y_reg == 0)) || ((move_yd_tick || ((move_xr_tick || set_db) && (cur_x_reg == MAX_X - 1))) && (cur_y_reg == MAX_Y - 1)): 
@@ -122,16 +130,7 @@ module text_screen_gen(
                 cur_y_next = cur_y_reg; // No move
         endcase
     end
-
-//    assign cur_x_next = (move_xr_tick && (cur_x_reg == MAX_X - 1)) || (move_xl_tick && (cur_x_reg == 0)) ? 0 :    
-//                        (move_xr_tick) ? cur_x_reg + 1 :    // move right
-//                        (move_xl_tick) ? cur_x_reg - 1 :    // move left
-//                        cur_x_reg;                          // no move
-                                           
-//    assign cur_y_next = (move_yu_tick && (cur_y_reg == 0)) || (move_yd_tick && (cur_y_reg == MAX_Y - 1)) ? 0 :    
-//                        (move_yu_tick) ? cur_y_reg - 1 :    // move up                        
-//                        (move_yd_tick) ? cur_y_reg + 1 :    // move down
-//                        cur_y_reg;                          // no move           
+         
     
     // object signals
     // green over black and reversed video for cursor
