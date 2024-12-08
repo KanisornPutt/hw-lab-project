@@ -2,11 +2,12 @@
 
 module dual_port_ram
     #(
-        parameter DATA_SIZE = 7,
+        parameter DATA_SIZE = 8,
         parameter ADDR_SIZE = 12
     )
     (
     input clk,
+    input reset,
     input we,
     input [ADDR_SIZE-1:0] addr_a, addr_b,
     input [DATA_SIZE-1:0] din_a,

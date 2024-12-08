@@ -4,11 +4,7 @@ module system(
     input clk,              // 100MHz Basys 3
     input reset,            // sw[15]
     input btnC,             // set
-    input btnU,             // up
-    input btnD,             // down
-    input btnL,             // left
-    input btnR,             // right
-    input [7:0] sw,         // sw[6:0] sets ASCII value
+    input [10:0] sw,         // sw[6:0] sets ASCII value
     input wire RsRx,        // UART Recieve
     output wire RsTx,       // UART Transmit
     output [3:0] an,        // display enable
@@ -17,9 +13,11 @@ module system(
     output [6:0] seg,       // Seven Segment Display  
     output dp,              // Decimal point
         
+    output [7:0] led,
+   
     // uart from another board 
-    input  JA0,          // Receive from another board
-    output JA1         // Transmit to another board
+    input  ja1,          // Receive from another board
+    output ja2         // Transmit to another board
     );
     
     // signals
@@ -40,6 +38,9 @@ module system(
     wire received1, received2;
     wire gnd; // ground
     wire [7:0] gnd_b; // ground bus
+    
+    assign led = data_in;
+
     
     // Clock
     wire targetClk;
@@ -72,23 +73,22 @@ module system(
     rom_reader2 rr2(d, sw, targetClk);
     
     // instantiate vga controller
-    vga_controller vga(.clk_100MHz(clk), .reset(reset), .video_on(w_vid_on),
+    vga_controller vga(.clk_100MHz(clk), .reset(1'b0), .video_on(w_vid_on),
                        .hsync(hsync), .vsync(vsync), .p_tick(w_p_tick), 
                        .x(w_x), .y(w_y));
     
     // instantiate text generation circuit
     text_screen_gen tsg(.clk(clk), .reset(reset), .video_on(w_vid_on), .set(received1),
-                        .up(btnU), .down(btnD), .left(btnL), .right(btnR),
-                        .sw(data_in[6:0]), .x(w_x), .y(w_y), .rgb(rgb_next));
+                        .data_in(data_in), .x(w_x), .y(w_y), .rgb(rgb_next), .theme_sel(sw[10:8]));
                         
     // UART1 Receive from another and transmit to monitor
     uart uart1(.tx(RsTx), .data_transmit(gnd_b),
-               .rx(JA0), .data_received(data_in), .received(received1),
+               .rx(ja1), .data_received(data_in), .received(received1),
                .dte(1'b0), .clk(clk));
                 
     // UART2 Receive from keyboard or switch and transmit to another
     uart uart2(.rx(RsRx), .data_transmit(sw[7:0]), 
-               .tx(JA1), .data_received(gnd_b), .received(received2),
+               .tx(ja2), .data_received(gnd_b), .received(received2),
                .dte(set), .clk(clk));
     
     // rgb buffer

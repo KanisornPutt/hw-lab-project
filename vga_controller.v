@@ -60,6 +60,11 @@ module vga_controller(
     reg [9:0] h_count_reg, h_count_next;
     reg [9:0] v_count_reg, v_count_next;
     
+    initial begin
+        h_count_next = 10'd0;
+        v_count_next = 10'd0;
+    end
+    
     // Output Buffers
     reg v_sync_reg, h_sync_reg;
     wire v_sync_next, h_sync_next;
